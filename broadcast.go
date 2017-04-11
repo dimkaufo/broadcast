@@ -14,10 +14,10 @@ type Receiver struct {
 	c chan broadcast
 }
 
-func NewBroadcaster() Broadcaster {
+func NewBroadcaster() *Broadcaster {
 	cc := make(chan broadcast, 1)
 	sendc := make(chan interface{})
-	b := Broadcaster{
+	b := &Broadcaster{
 		sendc: sendc,
 		cc:    cc,
 	}
@@ -41,11 +41,11 @@ func NewBroadcaster() Broadcaster {
 	return b
 }
 
-func (b Broadcaster) Register() Receiver {
+func (b *Broadcaster) Register() Receiver {
 	return Receiver{b.cc}
 }
 
-func (b Broadcaster) Write(v interface{}) {
+func (b *Broadcaster) Write(v interface{}) {
 	b.sendc <- v
 }
 
