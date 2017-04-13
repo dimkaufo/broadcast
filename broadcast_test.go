@@ -7,7 +7,7 @@ import (
 
 var ls []interface{}
 
-func listen(r Receiver) {
+func listen(r *Receiver) {
 	for v := r.Read(); v != nil; v = r.Read() {
 		go listen(r)
 		ls = append(ls, v)

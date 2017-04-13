@@ -41,8 +41,8 @@ func NewBroadcaster() *Broadcaster {
 	return b
 }
 
-func (b *Broadcaster) Register() Receiver {
-	return Receiver{b.cc}
+func (b *Broadcaster) Register() *Receiver {
+	return &Receiver{b.cc}
 }
 
 func (b *Broadcaster) Write(v interface{}) {
