@@ -1,5 +1,7 @@
 package broadcast
 
+import "sync"
+
 type Broadcaster interface {
 	Register() Receiver
 	Write(v interface{})
@@ -17,6 +19,7 @@ type broadcast struct {
 type broadcaster struct {
 	cc    chan broadcast
 	sendc chan<- interface{}
+	mut   *sync.RWMutex
 }
 
 type receiver struct {
@@ -37,21 +40,23 @@ func NewBroadcaster() *broadcaster {
 	b := &broadcaster{
 		sendc: sendc,
 		cc:    cc,
+		mut:   &sync.RWMutex{},
 	}
 
 	go func() {
 		for {
-			select {
-			case v := <-sendc:
-				if v == nil {
-					b.cc <- broadcast{}
-					return
-				}
-				c := make(chan broadcast, 1)
-				nb := broadcast{c: c, v: v}
-				b.cc <- nb
-				b.cc = c
+			v := <-sendc
+			if v == nil {
+				b.cc <- broadcast{}
+				return
 			}
+			c := make(chan broadcast, 1)
+			nb := broadcast{c: c, v: v}
+			b.cc <- nb
+
+			b.mut.Lock()
+			b.cc = c
+			b.mut.Unlock()
 		}
 	}()
 
@@ -59,6 +64,8 @@ func NewBroadcaster() *broadcaster {
 }
 
 func (b *broadcaster) Register() Receiver {
+	b.mut.RLock()
+	defer b.mut.RUnlock()
 	return &receiver{b.cc}
 }
 
